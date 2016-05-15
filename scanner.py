@@ -15,6 +15,9 @@ def tagToText(tag):
 def getHref(tag):
 	return None if tag.find('a')==None else tag.find('a').get("href")
 
+def getDate(tag):
+	return tag.find(text=True).strip() + ' ' + str(year)
+
 
 BASE_URL=	"https://en.wikipedia.org"
 year=		1945
@@ -31,18 +34,14 @@ while year <= date.today().year:
 		album=	None
 		artist=	None
 		label=	None	
-
 		for tr in wikitableChildren:
 			tdList=			tr.findChildren("td")	# `td` elements containing info on dates, album titles, artists and labels
-			print tdList
-
 			tdListLength=	len(tdList)
 			if tdListLength > 0:	# If there are `td` elements, we can be sure we are reading data about the Billboard 200 
 				if tagToText(tdList[0]) == "Issue Date":
 					continue
 
-				chartDate=		tdList[0].find(text=True).strip() + ' ' + str(year)
-				print chartDate	
+				chartDate=	getDate(tr.findChildren("th")[0]) if len(tr.findChildren("th"))==1 else getDate(tdList[0])	# This ternary statement is necessary because startng with 2014, date is stored in `th`
 				chartDatePython=datetime.strptime(chartDate,"%B %d %Y").date()
 				tdHasAlbumInfo=	tdListLength > 1	# `tdListLength` is `1` when only the date is available
 				if tdHasAlbumInfo:
@@ -52,8 +51,8 @@ while year <= date.today().year:
 						artist=		tagToText(tdList[2])
 						artistHref=	getHref(tdList[2])
 
-				# print chartDatePython, album, albumHref, artist, artistHref
-				# print "=="
+				print chartDatePython, album, albumHref, artist, artistHref
+				print "=="
 
 	print "==="
 	year += 1
