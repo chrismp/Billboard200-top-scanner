@@ -78,6 +78,7 @@ while year <= date.today().year:
 					if albumFileHref != None:
 						albumFilePage=	getSoup(BASE_URL + albumFileHref)
 						albumImageURL=	 albumFilePage.find("div",{"id":"file"}).find('a').get("href")
+						albumImageURL=	"http:"+albumImageURL
 
 
 				with open(outputFile) as csvFile:
