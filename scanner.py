@@ -23,14 +23,16 @@ def getDate(tag):
 outputFile=	"Billboard200Data.csv"
 with open(outputFile, "wb") as csvFile:
 	headers=	[
-				"Year",
+				"Date",
 				"Album",
 				"AlbumURL",
+				"AlbumImageURL",
 				"Artist",
 				"ArtistURL"
 			]
-	writer=		csv.DictWriter(csvFile, fieldnames=headers, quotechar='"' )
+	writer=		csv.DictWriter(csvFile, fieldnames=headers, quotechar='"')
 	writer.writeheader()
+
 
 BASE_URL=	"https://en.wikipedia.org"
 year=		1945
@@ -67,15 +69,30 @@ while year <= date.today().year:
 						artistTag=	tdList[2] if year < 2014 else tdList[1]
 						artist=		tagToText(artistTag)
 						artistHref=	getHref(artistTag)
-				writer.writerow(
-					{
-						"Year": year,
-						"Album": album,
-						"AlbumURL": albumHref,
-						"Artist": artist,
-						"ArtistURL": artistHref
-					}
-				)
-				print chartDatePython, album, albumHref, artist, artistHref
-	print "==="
+
+				if albumHref != None:
+					print BASE_URL + albumHref
+					albumPage=	getSoup(BASE_URL + albumHref)
+					albumFileHref=	albumPage.find("div",{"id":"mw-content-text"}).find("img").parent.get("href")
+
+					if albumFileHref != None:
+						albumFilePage=	getSoup(BASE_URL + albumFileHref)
+						albumImageURL=	 albumFilePage.find("div",{"id":"file"}).find('a').get("href")
+
+
+				with open(outputFile) as csvFile:
+					reader=	csv.DictReader(csvFile)
+					for row in reader:
+						if album == row["Album"] and artist == row["Artist"]:
+							albumHref=	row["AlbumURL"]
+							artistHref=	row["ArtistURL"]
+
+				with open(outputFile,"ab") as csvFile:
+					writer=	csv.writer(csvFile, quotechar='"')
+					list=	[chartDatePython, album, albumHref, albumImageURL,  artist, artistHref]
+					writer.writerow(list)
+
+
+#				print chartDatePython, album, albumHref, artist, artistHref
+#	print "==="
 	year += 1
