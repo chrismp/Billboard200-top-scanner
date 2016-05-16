@@ -22,18 +22,20 @@ def getDate(tag):
 BASE_URL=	"https://en.wikipedia.org"
 year=		1945
 while year <= date.today().year:
+	year=	1964 if year==1960 else year
 	yearURL=	BASE_URL+"/wiki/List_of_Billboard_200_number-one_albums_of_"+str(year)
 	yearPage=	getSoup(yearURL)
 
 	wikitables=	yearPage.findAll("table",{"class": "wikitable"})
 	for wikitable in wikitables:
 		wikitableChildren=	wikitable.findChildren("tr")
+
 		if len(wikitableChildren) <= 1:
 			continue
 
 		album=	None
 		artist=	None
-		label=	None	
+		label=	None
 		for tr in wikitableChildren:
 			tdList=			tr.findChildren("td")	# `td` elements containing info on dates, album titles, artists and labels
 			tdListLength=	len(tdList)
@@ -44,15 +46,16 @@ while year <= date.today().year:
 				chartDate=	getDate(tr.findChildren("th")[0]) if len(tr.findChildren("th"))==1 else getDate(tdList[0])	# This ternary statement is necessary because startng with 2014, date is stored in `th`
 				chartDatePython=datetime.strptime(chartDate,"%B %d %Y").date()
 				tdHasAlbumInfo=	tdListLength > 1	# `tdListLength` is `1` when only the date is available
-				if tdHasAlbumInfo:
-					album=		tagToText(tdList[1])
-					albumHref=	getHref(tdList[1])
+				if tdHasAlbumInfo:					
 					if tdListLength > 2:
-						artist=		tagToText(tdList[2])
-						artistHref=	getHref(tdList[2])
-
+						albumTag=	tdList[1] if year < 2014 else tdList[0]
+						album=		tagToText(albumTag)
+						albumHref=	getHref(albumTag)
+						artistTag=	tdList[2] if year < 2014 else tdList[1]
+						artist=		tagToText(artistTag)
+						artistHref=	getHref(artistTag)
 				print chartDatePython, album, albumHref, artist, artistHref
-				print "=="
+				# print "=="
 
 	print "==="
 	year += 1
