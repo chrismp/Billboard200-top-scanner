@@ -10,6 +10,7 @@ def getSoup(url):
 	return soup
 
 def tagToText(tag):
+	print tag
 	txt=	tag.find(text=True)
 	return None if txt==None else txt.encode("utf-8").strip()
 
@@ -71,29 +72,30 @@ while year <= date.today().year:
 						artistHref=	getHref(artistTag)
 
 				if albumHref != None:
-					print BASE_URL + albumHref
 					albumPage=	getSoup(BASE_URL + albumHref)
 					albumFileHref=	albumPage.find("div",{"id":"mw-content-text"}).find("img").parent.get("href")
 
-					if albumFileHref != None:
+					if albumFileHref == None:
+						albumImageURL=	None
+					else:
 						albumFilePage=	getSoup(BASE_URL + albumFileHref)
 						albumImageURL=	 albumFilePage.find("div",{"id":"file"}).find('a').get("href")
 						albumImageURL=	"http:"+albumImageURL
-
 
 				with open(outputFile) as csvFile:
 					reader=	csv.DictReader(csvFile)
 					for row in reader:
 						if album == row["Album"] and artist == row["Artist"]:
-							albumHref=	row["AlbumURL"]
-							artistHref=	row["ArtistURL"]
+							print [album, row["Album"], artist, row["Artist"]]
+							albumHref=		row["AlbumURL"]
+							artistHref=		row["ArtistURL"]
+							albumImageURL=	row["AlbumImageURL"]
+							break
 
 				with open(outputFile,"ab") as csvFile:
-					writer=	csv.writer(csvFile, quotechar='"')
-					list=	[chartDatePython, album, albumHref, albumImageURL,  artist, artistHref]
-					writer.writerow(list)
-
-
-#				print chartDatePython, album, albumHref, artist, artistHref
-#	print "==="
+					writer=		csv.writer(csvFile, quotechar='"')
+					listData=	[chartDatePython, album, albumHref, albumImageURL, artist, artistHref]
+					writer.writerow(listData)
+					print listData
+					print "========="
 	year += 1
