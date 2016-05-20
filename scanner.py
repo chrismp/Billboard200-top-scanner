@@ -11,7 +11,7 @@ def getSoup(url):
 
 def tagToText(tag):
 	print tag
-	txt=	tag.find(text=True)
+	txt=	tag.get_text()
 	return None if txt==None else txt.encode("utf-8").strip()
 
 def getHref(tag):
@@ -23,7 +23,7 @@ def getDate(tag):
 
 outputFile=	"Billboard200Data.csv"
 with open(outputFile, "wb") as csvFile:
-	headers=	[
+	headers=[
 				"Date",
 				"Album",
 				"AlbumURL",
