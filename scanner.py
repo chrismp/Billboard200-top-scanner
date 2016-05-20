@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from urllib2 import urlopen
 from datetime import date, datetime
 import csv
+import sys
 
 def getSoup(url):
 	print "Opening "+url
@@ -10,7 +11,6 @@ def getSoup(url):
 	return soup
 
 def tagToText(tag):
-	print tag
 	txt=	tag.get_text()
 	return None if txt==None else txt.encode("utf-8").strip()
 
@@ -20,6 +20,8 @@ def getHref(tag):
 def getDate(tag):
 	return tag.find(text=True).strip() + ' ' + str(year)
 
+def findImgTag(tag):
+	return tag.find("img")
 
 outputFile=	"Billboard200Data.csv"
 with open(outputFile, "wb") as csvFile:
@@ -71,25 +73,33 @@ while year <= date.today().year:
 						artist=		tagToText(artistTag)
 						artistHref=	getHref(artistTag)
 
-				if albumHref != None:
-					albumPage=	getSoup(BASE_URL + albumHref)
-					albumFileHref=	albumPage.find("div",{"id":"mw-content-text"}).find("img").parent.get("href")
+				if albumHref == None:
+					albumImageURL=	None
+				else:
+					albumImgTag=	None
+					albumPage=		getSoup(BASE_URL + albumHref)
+					mwContextText=	albumPage.find("div",{"id":"mw-content-text"})
+					infobox=		mwContextText.find("table",{"class":"infobox"})
+					albumImgTag=	mwContextText.find("img") if infobox==None else infobox.find("img")
 
-					if albumFileHref == None:
+					if albumImgTag == None:
 						albumImageURL=	None
 					else:
-						albumFilePage=	getSoup(BASE_URL + albumFileHref)
-						albumImageURL=	 albumFilePage.find("div",{"id":"file"}).find('a').get("href")
-						albumImageURL=	"http:"+albumImageURL
+						albumFileHref=	albumImgTag.parent.get("href")
+						if albumFileHref == None:
+							albumImageURL=	None
+						else:
+							albumFilePage=	getSoup(BASE_URL + albumFileHref)
+							albumImageURL=	 albumFilePage.find("div",{"id":"file"}).find('a').get("href")
+							albumImageURL=	"http:"+albumImageURL
 
 				with open(outputFile) as csvFile:
 					reader=	csv.DictReader(csvFile)
 					for row in reader:
 						if album == row["Album"] and artist == row["Artist"]:
-							print [album, row["Album"], artist, row["Artist"]]
-							albumHref=		row["AlbumURL"]
-							artistHref=		row["ArtistURL"]
-							albumImageURL=	row["AlbumImageURL"]
+							albumHref=		None if row["AlbumURL"]==None or row["AlbumURL"]=='' else row["AlbumURL"]
+							artistHref=		None if row["ArtistURL"]==None or row["ArtistURL"]=='' else row["ArtistURL"]
+							albumImageURL=	None if row["AlbumImageURL"]==None or row["AlbumImageURL"]=='' else row["AlbumImageURL"]
 							break
 
 				with open(outputFile,"ab") as csvFile:
